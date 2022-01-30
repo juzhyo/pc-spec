@@ -8,6 +8,7 @@
 import sys
 import pyvisa
 import qdarkstyle
+import sr830
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -23,6 +24,21 @@ class MainWindow(MW_Base, MW_Ui):
         self.setupUi(self)
         self.set_buttons()
         self.populate_resources()
+        
+        # SR830 Lock-in amplifier
+        self.equipments_sr830_connect.clicked.connect(lambda: sr830.connect(self, self.equipments_sr830_address.currentText()))
+        self.parameters_sr830_time_constant.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'time_constant'))
+        self.parameters_sr830_filter_slope.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'filter_slope'))
+        self.parameters_sr830_input_config.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'input_config'))
+        self.parameters_sr830_frequency.valueChanged.connect(lambda: sr830.set_parameters(self,'frequency'))
+        self.parameters_sr830_input_coupling_ac.clicked.connect(lambda: sr830.set_parameters(self,'input_coupling'))
+        self.parameters_sr830_input_coupling_dc.clicked.connect(lambda: sr830.set_parameters(self,'input_coupling'))
+        self.parameters_sr830_input_grounding_float.clicked.connect(lambda: sr830.set_parameters(self,'input_grounding'))
+        self.parameters_sr830_input_grounding_ground.clicked.connect(lambda: sr830.set_parameters(self,'input_grounding'))
+        self.parameters_sr830_sensitivity.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'sensitivity'))
+        self.parameters_sr830_channel1.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'channel1'))
+        self.parameters_sr830_channel2.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'channel2'))
+
 
         self.show()
 
@@ -62,9 +78,7 @@ class MainWindow(MW_Base, MW_Ui):
     
     def sort_USB(self, value):
         return value[0:3] != 'USB'
-            
-    def get_resources(self):
-        return pyvisa.ResourceManager().list_resources()
+    
 
 if __name__ == '__main__':
     app = qtw.QApplication(sys.argv)
