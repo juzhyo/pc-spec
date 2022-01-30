@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Agaration 1.0</string>
+   <string>OMAK</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
