@@ -58,7 +58,7 @@ def read_parameters(self):
             'input_grounding':input_grounding.index(self.sr830.input_grounding),
             'sensitivity':sensitivity.index(self.sr830.sensitivity),
             'channel1':int(self.sr830.channel1[0]),
-            'channel2':int(self.sr830.channel2[1])}
+            'channel2':int(self.sr830.channel2[0])}
 
 def get_parameters(self):
     time_constant = [30000,10000,3000,1000,300,100,30,10,3,1,0.3,0.1,0.03,0.01,0.003,0.001,0.0003,0.0001,0.00003,0.00001]
@@ -67,17 +67,18 @@ def get_parameters(self):
     input_coupling = ['AC','DC']
     input_grounding = ['Float','Ground']
     input_notch_config = ['None', 'Line', '2 x Line', 'Both']
-    if input_config[self.parameters_sr830_input_config.currentIndex()] in ['A','A - B']:
-        sensitivity = [1,5e-1,2e-1,1e-1,5e-2,2e-2,1e-2,5e-3,2e-3,1e-3,5e-4,2e-4,1e-4,5e-5,2e-5,1e-5,5e-6,2e-6,1e-6,5e-7,2e-7,1e-7,5e-8,2e-8,1e-8,5e-9,2e-9,1e-9]
-    elif input_config[self.parameters_sr830_input_config.currentIndex()] in ['I (1 MOhm)', 'I (100 MOhm)']:
-        sensitivity = [1e-6,5e-7,2e-7,1e-7,5e-8,2e-8,1e-8,5e-9,2e-9,1e-9,5e-10,2e-10,1e-10,5e-11,2e-11,1e-11,5e-12,2e-12,1e-12,5e-13,2e-13,1e-13,5e-14,2e-14,1e-14,5e-15,2e-15]
+    # if input_config[self.parameters_sr830_input_config.currentIndex()] in ['A','A - B']:
+    #     sensitivity = [1,5e-1,2e-1,1e-1,5e-2,2e-2,1e-2,5e-3,2e-3,1e-3,5e-4,2e-4,1e-4,5e-5,2e-5,1e-5,5e-6,2e-6,1e-6,5e-7,2e-7,1e-7,5e-8,2e-8,1e-8,5e-9,2e-9,1e-9]
+    # elif input_config[self.parameters_sr830_input_config.currentIndex()] in ['I (1 MOhm)', 'I (100 MOhm)']:
+    #     sensitivity = [1e-6,5e-7,2e-7,1e-7,5e-8,2e-8,1e-8,5e-9,2e-9,1e-9,5e-10,2e-10,1e-10,5e-11,2e-11,1e-11,5e-12,2e-12,1e-12,5e-13,2e-13,1e-13,5e-14,2e-14,1e-14,5e-15,2e-15]
+    sensitivity = [1,5e-1,2e-1,1e-1,5e-2,2e-2,1e-2,5e-3,2e-3,1e-3,5e-4,2e-4,1e-4,5e-5,2e-5,1e-5,5e-6,2e-6,1e-6,5e-7,2e-7,1e-7,5e-8,2e-8,1e-8,5e-9,2e-9,1e-9]
     channel1 = ['X', 'R', 'X Noise', 'Aux In 1', 'Aux In 2']
     channel2 = ['Y', 'Theta', 'Y Noise', 'Aux In 3', 'Aux In 4']                
         
     return {'time_constant':time_constant[self.parameters_sr830_time_constant.currentIndex()],
             'filter_slope':filter_slope[self.parameters_sr830_filter_slope.currentIndex()],
             'input_config':input_config[self.parameters_sr830_input_config.currentIndex()],
-            'frequency':self.parameters_sr830_frequency.value(),
+            'frequency':self.parameters_sr830_frequency,
             'input_coupling':input_coupling[self.parameters_sr830_input_coupling_dc.isChecked()],
             'input_grounding':input_grounding[self.parameters_sr830_input_grounding_ground.isChecked()],
             'sensitivity':sensitivity[self.parameters_sr830_sensitivity.currentIndex()],
