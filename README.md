@@ -1,1 +1,1 @@
-# one-man-army-knife
+# pc-spec
