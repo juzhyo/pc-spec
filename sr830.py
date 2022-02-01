@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 
 ############################
-# THE ONE-MAN ARMY KNIFE   #
+# PC-SPEC                  #
 # AUTHOR: JUSTIN ZHOU YONG #
 ############################
 
 from pymeasure.instruments.srs import SR830
+from PyQt5 import QtCore as qtc
+from PyQt5 import QtChart as qtch
+from PyQt5 import QtGui as qtg
+from collections import deque
 
 def connect(self, resource_name):
     try:
