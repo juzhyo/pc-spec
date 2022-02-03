@@ -9,6 +9,8 @@ import sys
 import pyvisa
 import qdarkstyle
 import sr830
+import lltf
+import pm100d
 import numpy as np
 
 from PyQt5 import QtWidgets as qtw
@@ -28,7 +30,7 @@ class MainWindow(MW_Base, MW_Ui):
         self.set_buttons()
         self.populate_resources()
         
-        # SR830 Lock-in amplifier
+        # SR830 lock-in amplifier
         self.equipments_sr830_connect.clicked.connect(lambda: sr830.connect(self, self.equipments_sr830_address.currentText()))
         self.parameters_sr830_time_constant.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'time_constant'))
         self.parameters_sr830_filter_slope.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'filter_slope'))
@@ -43,12 +45,35 @@ class MainWindow(MW_Base, MW_Ui):
         self.parameters_sr830_channel2.currentIndexChanged.connect(lambda: sr830.set_parameters(self,'channel2'))
         
         
-        self.sr830_channel_view_thread = qtc.QThread()
-        self.sr830_channel_view_thread.start()
+        # self.sr830_channel_view_thread = qtc.QThread()
+        # self.sr830_channel_view_thread.start()
         self.sr830_channel_view()
         
+        # Laser line tunable filter
+        self.equipments_lltf_connect.clicked.connect(lambda: lltf.connect(self))
+        self.parameters_lltf_current_wavelength.valueChanged.connect(lambda: lltf.update_current_wavelength_slider(self))
+        self.parameters_lltf_current_wavelength_slider.valueChanged.connect(lambda: lltf.update_current_wavelength(self))
+        # self.parameters_lltf_current_wavelength.keyPressEvent = qtc.pyqtSignal(int)
+        
+        # Thorlabs PM100D powermeter
+        # self.equipments_pm100d_connect.clicked.connect(lambda: pm100d.connect(self, self.equipments_pm100d_address.currentText()))
+        
+        self.pm100d = pm100d.instrument()
+        
+        self.equipments_pm100d_connect.clicked.connect(lambda: self.pm100d.connect(self.equipments_pm100d_address.currentText()))
+        self.pm100d.log_str.connect(self.update_log)
+        self.pm100d.enable_instrument.connect(self.enable_parameter_box)
+        self.pm100d.instrument.connect(self.pm100d_run_live)
+       
 
-
+        # self.pm100d_thread = qtc.QThread()
+        # self.pm100d_live = pm100d.live()
+        # self.pm100d_live.moveToThread(self.pm100d_thread)
+        # self.pm100d_live.set_instrument(self.pm100d)
+        # self.pm100d_live.set_lcd(self.parameters_pm100d_lcd)
+        # self.pm100d_live.run()
+        # self.pm100d_thread.start()
+        
         self.show()
 
     def set_buttons(self):
@@ -87,6 +112,22 @@ class MainWindow(MW_Base, MW_Ui):
     
     def sort_USB(self, value):
         return value[0:3] != 'USB'
+    
+    def update_log(self, string):
+        self.log_box.append(string)
+        
+    def enable_parameter_box(self, instrument):
+        if instrument == "PM100D":
+            self.parameters_pm100d.setEnabled(True)
+            
+    def pm100d_run_live(self,instrument):   
+            self.pm100d_thread = qtc.QThread()
+            self.pm100d_live = pm100d.live()
+            self.pm100d_live.moveToThread(self.pm100d_thread)
+            self.pm100d_live.set_instrument(instrument)
+            self.pm100d_live.set_lcd(self.parameters_pm100d_lcd)
+            self.pm100d_live.run()
+            self.pm100d_thread.start()
     
     def sr830_channel_view(self):    
         num_data_points = 80
@@ -207,7 +248,15 @@ class MainWindow(MW_Base, MW_Ui):
             self.channel2_chart.setAxisY(channel2_y_axis, self.channel2_series)
             
             channel2_new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.channel2_data)]
-            self.channel2_series.replace(channel2_new_data)    
+            self.channel2_series.replace(channel2_new_data)
+
+
+# class test(MainWindow):
+#     def __init__(self):
+#         print('hi')
+            
+
+
 
 if __name__ == '__main__':
     app = qtw.QApplication(sys.argv)
