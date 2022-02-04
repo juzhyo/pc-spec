@@ -11,6 +11,7 @@ import qdarkstyle
 import sr830
 import lltf
 import pm100d
+import measure
 import numpy as np
 
 from PyQt5 import QtWidgets as qtw
@@ -29,6 +30,8 @@ class MainWindow(MW_Base, MW_Ui):
         self.setupUi(self)
         self.set_buttons()
         self.populate_resources()
+        self.measure_chart_setup()
+
         
         # SR830 lock-in amplifier
         self.equipments_sr830_connect.clicked.connect(lambda: sr830.connect(self, self.equipments_sr830_address.currentText()))
@@ -61,9 +64,13 @@ class MainWindow(MW_Base, MW_Ui):
         self.pm100d = pm100d.instrument()
         
         self.equipments_pm100d_connect.clicked.connect(lambda: self.pm100d.connect(self.equipments_pm100d_address.currentText()))
+
+        
         self.pm100d.log_str.connect(self.update_log)
         self.pm100d.enable_instrument.connect(self.enable_parameter_box)
         self.pm100d.instrument.connect(self.pm100d_run_live)
+        
+        self.pm100d_chart_setup()
        
 
         # self.pm100d_thread = qtc.QThread()
@@ -87,6 +94,10 @@ class MainWindow(MW_Base, MW_Ui):
                 
         run_action.setIcon(run_icon)
         stop_action.setIcon(stop_icon)
+        
+        run_action.setCheckable(True)
+        
+        run_action.changed.connect(lambda: self.run(run_action))
         
     def populate_resources(self):
         """Populate a combobox with available resource addresses"""
@@ -126,6 +137,9 @@ class MainWindow(MW_Base, MW_Ui):
             self.pm100d_live.moveToThread(self.pm100d_thread)
             self.pm100d_live.set_instrument(instrument)
             self.pm100d_live.set_lcd(self.parameters_pm100d_lcd)
+            self.pm100d_live.set_trace_display(self.parameters_pm100d_trace_display)
+            self.pm100d_live.set_trace_display_chart(self.pm100d_trace_display_chart)
+            self.pm100d_live.set_trace_display_series(self.pm100d_trace_display_series)
             self.pm100d_live.run()
             self.pm100d_thread.start()
     
@@ -244,11 +258,104 @@ class MainWindow(MW_Base, MW_Ui):
                 self.channel2_data.append(self.sr830.theta)
                 # y_axis.setRange(-self.sr830.sensitivity, self.sr830.sensitivity) 
                 channel2_y_axis.setRange(-180,180) 
-                
-            self.channel2_chart.setAxisY(channel2_y_axis, self.channel2_series)
-            
+
             channel2_new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.channel2_data)]
             self.channel2_series.replace(channel2_new_data)
+                
+            self.channel2_chart.setAxisY(channel2_y_axis, self.channel2_series)
+    
+            
+    def pm100d_chart_setup(self):
+        num_data_points = 80
+    
+        x_axis = qtch.QValueAxis()
+        x_axis.setRange(0, num_data_points)
+        x_axis.setLabelsVisible(False)
+        y_axis = qtch.QValueAxis()
+        y_axis.setRange(0, 1e-3)
+    
+        gridColor = qtg.QColor('#696969')
+        x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        
+        self.pm100d_trace_display_chart = qtch.QChart()
+        self.pm100d_trace_display_chart.setMargins(qtc.QMargins(0,-25,0,0))
+        self.pm100d_trace_display_chart.setTheme(qtch.QChart.ChartThemeLight)
+        self.pm100d_trace_display_chart.setBackgroundVisible(False)
+        self.pm100d_trace_display_chart.setBackgroundRoundness(0)
+        self.pm100d_trace_display_chart.layout().setContentsMargins(0,0,0,0)
+        
+        self.parameters_pm100d_trace_display.setChart(self.pm100d_trace_display_chart)
+
+        self.pm100d_trace_display_series = qtch.QLineSeries()
+        self.pm100d_trace_display_chart.addSeries(self.pm100d_trace_display_series)
+            
+        self.data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.pm100d_trace_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.data)])
+        
+        self.pm100d_trace_display_chart.setAxisX(x_axis, self.pm100d_trace_display_series)
+        self.pm100d_trace_display_chart.setAxisY(y_axis, self.pm100d_trace_display_series)
+        
+    def measure_chart_setup(self):
+        num_data_points = 80
+    
+        x_axis = qtch.QValueAxis()
+        x_axis.setRange(0, num_data_points)
+        x_axis.setLabelsVisible(False)
+        y_axis = qtch.QValueAxis()
+        y_axis.setRange(0, 1e-3)
+    
+        gridColor = qtg.QColor('#696969')
+        x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        
+        self.measure_display_chart = qtch.QChart()
+        self.measure_display_chart.setMargins(qtc.QMargins(0,0,0,0))
+        self.measure_display_chart.setTheme(qtch.QChart.ChartThemeLight)
+        self.measure_display_chart.setBackgroundVisible(False)
+        self.measure_display_chart.setBackgroundRoundness(0)
+        self.measure_display_chart.layout().setContentsMargins(0,0,0,0)
+        
+        self.plot_x.setChart(self.measure_display_chart)
+
+        self.measure_display_series = qtch.QLineSeries()
+        self.measure_display_chart.addSeries(self.measure_display_series)
+            
+        self.measure_data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.measure_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.measure_data)])
+        
+        self.measure_display_chart.setAxisX(x_axis, self.measure_display_series)
+        self.measure_display_chart.setAxisY(y_axis, self.measure_display_series)
+        
+    def run(self,run_action,parameters_sr830=[],parameters_galvo=[]):
+        if run_action.isChecked() == True:
+            
+            if (self.parameters_sr830.isEnabled() and self.parameters_lltf.isEnabled() and self.parameters_pm100d.isEnabled()):
+                self.measure = measure.measure()
+                self.measure_thread = qtc.QThread()
+                self.measure.moveToThread(self.measure_thread)
+                self.measure.measure_finished.connect(self.measure_thread.quit)
+                self.measure.set_sr830(self.sr830)
+                # self.measure.set_lltf(self.lltf)
+                self.measure.set_pm100d(self.pm100d)
+                self.measure.set_x_chart(self.measure_display_chart)
+                self.measure_thread.started.connect(self.measure.run)
+                self.measure_thread.start()
+                # self.mapper.set_sr830(self.sr830)
+                # self.mapper.set_parameters_galvo(self.parameters_galvo)
+                # self.mapper_thread.started.connect(self.mapper.do_mapping)
+                # self.mapper.mapping_started.connect(lambda: self.log_box.append('[MEASUREMENT] Starting...'))
+                # self.mapper.mapping_finished.connect(lambda: self.log_box.append('<span style="color:palegreen">[MEASUREMENT] Complete</span>'))
+                # self.mapper.mapping_moved.connect(self.refresh_plots)
+                
+                self.measure.measure_finished.connect(lambda: run_action.setChecked(False))     
+                
+            else:
+                self.log_box.append('<span style="color:lightcoral">[ERROR] SR830 not connected<\span>')
+                run_action.setChecked(False)
+             
+        else:
+            pass
 
 
 # class test(MainWindow):

@@ -6,13 +6,18 @@
 ############################
 
 from PyQt5 import QtCore as qtc
+from PyQt5 import QtChart as qtch
+from PyQt5 import QtGui as qtg
 from pymeasure.instruments.thorlabs import ThorlabsPM100USB
+
+from collections import deque
 
 class instrument(qtc.QObject):
     # dataChanged = pyqtSignal(float, float, float, float)
     log_str = qtc.pyqtSignal(str)
     enable_instrument = qtc.pyqtSignal(str)
     instrument = qtc.pyqtSignal(object)
+
 
     def __init__(self, parent=None):
         qtc.QThread.__init__(self, parent)
@@ -23,17 +28,7 @@ class instrument(qtc.QObject):
             ThorlabsPM100USB(resource_name).id
             # self.parameters_pm100d.setEnabled(True)
             self.pm100d = ThorlabsPM100USB(resource_name)
-            self.enable_instrument.emit('PM100D')
-        
-            # sr830_parameters = read_parameters(self)
-        
-            # print(sr830_parameters.get('sensitivity'))
-        
-            # self.parameters_sr830_time_constant.setCurrentIndex(10)
-        
-            # set_parameters(self,initialize=True)	
-
-            # self.parameters_sr830_time_constant.setItemText("asdf")        
+            self.enable_instrument.emit('PM100D')   
                 
         except:
             self.log_str.emit('<span style="color:lightcoral">[ERROR] PM100D connection failed<\span>')
@@ -59,6 +54,12 @@ class live(qtc.QObject):
         super().__init__()
         self.pm100d = None
         self.lcd = None
+        self.trace_display = None
+        self.trace_display_chart = None
+        self.trace_display_series = None
+        
+        num_data_points = 80
+        self.trace_display_data = deque([0]*num_data_points, maxlen=num_data_points)
         
     @qtc.pyqtSlot(object)    
     def set_instrument(self, instrument):
@@ -67,22 +68,47 @@ class live(qtc.QObject):
     @qtc.pyqtSlot(object)    
     def set_lcd(self, lcd):
         self.lcd = lcd
+        
+    @qtc.pyqtSlot(object)    
+    def set_trace_display(self, trace_display):
+        self.trace_display = trace_display
 
-    # def onDataChanged(self, RPM, Torque, HorsePower, Run_Time):
-    #     self.lcdNumber_4.display(RPM)
-    #     self.lcdNumber_5.display(Torque)
-    #     self.lcdNumber_6.display(HorsePower)
-    #     self.lcdNumber_7.display(Run_Time)
+    @qtc.pyqtSlot(object)    
+    def set_trace_display_chart(self, chart):
+        self.trace_display_chart = chart
+        
+    @qtc.pyqtSlot(object)    
+    def set_trace_display_series(self, series):
+        self.trace_display_series = series
     
     @qtc.pyqtSlot()
-    def run(self):
-        self.timer=qtc.QTimer(interval=500, timeout=self.refresh)
+    def run(self):      
+        self.timer=qtc.QTimer(interval=1000, timeout=self.refresh)
         self.timer.start()
         
         # self.lcd.display(self.pm100d.power*1e6)
 
     def refresh(self):
         self.lcd.display(self.pm100d.power*1e6)
+        
+        y_axis = qtch.QValueAxis()
+        axisBrush = qtg.QBrush(qtg.QColor('#ffffff'))
+        y_axis.setLabelsBrush(axisBrush)
+        gridColor = qtg.QColor('#696969')
+        # x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        
+        self.trace_display_data.append(self.pm100d.power*1e6)
+        
+        # print(max(self.trace_display_data))
+
+        y_axis.setRange(min(self.trace_display_data), max(self.trace_display_data))
+
+        new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.trace_display_data)]
+        self.trace_display_series.replace(new_data)
+            
+        # self.pm100d_trace_display_chart.setAxisY(y_axis, self.trace_display_series)
+        # self.trace_display.setChart(self.trace_display_chart)
         
 
     # def __del__(self):  # part of the standard format of a QThread
