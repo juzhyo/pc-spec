@@ -353,13 +353,13 @@ class MainWindow(MW_Base, MW_Ui):
         self.pm100d_trace_display_chart.setAxisY(y_axis, self.pm100d_trace_display_series)
         
     def measure_chart_setup(self):
-        num_data_points = 80
+        num_data_points = 0
     
         x_axis = qtch.QValueAxis()
         x_axis.setRange(0, num_data_points)
         x_axis.setLabelsVisible(False)
         y_axis = qtch.QValueAxis()
-        y_axis.setRange(0, 1e-3)
+        y_axis.setRange(0, 1)
     
         gridColor = qtg.QColor('#696969')
         x_axis.setGridLineColor(gridColor)
@@ -372,9 +372,9 @@ class MainWindow(MW_Base, MW_Ui):
         self.measure_display_chart.setBackgroundRoundness(0)
         self.measure_display_chart.layout().setContentsMargins(0,0,0,0)
         
-        self.plot_x.setChart(self.measure_display_chart)
+        self.plots_x.setChart(self.measure_display_chart)
 
-        self.measure_display_series = qtch.QLineSeries()
+        self.measure_display_series = qtch.QScatterSeries()
         self.measure_display_chart.addSeries(self.measure_display_series)
             
         self.measure_data = deque([0]*num_data_points, maxlen=num_data_points)
@@ -382,6 +382,36 @@ class MainWindow(MW_Base, MW_Ui):
         
         self.measure_display_chart.setAxisX(x_axis, self.measure_display_series)
         self.measure_display_chart.setAxisY(y_axis, self.measure_display_series)
+
+        num_data_points = 0
+    
+        x_axis = qtch.QValueAxis()
+        x_axis.setRange(0, num_data_points)
+        x_axis.setLabelsVisible(False)
+        y_axis = qtch.QValueAxis()
+        y_axis.setRange(0, 1)
+    
+        gridColor = qtg.QColor('#696969')
+        x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        
+        self.theta_display_chart = qtch.QChart()
+        self.theta_display_chart.setMargins(qtc.QMargins(0,0,0,0))
+        self.theta_display_chart.setTheme(qtch.QChart.ChartThemeLight)
+        self.theta_display_chart.setBackgroundVisible(False)
+        self.theta_display_chart.setBackgroundRoundness(0)
+        self.theta_display_chart.layout().setContentsMargins(0,0,0,0)
+        
+        self.plots_theta.setChart(self.theta_display_chart)
+
+        self.theta_display_series = qtch.QScatterSeries()
+        self.theta_display_chart.addSeries(self.theta_display_series)
+            
+        self.theta_data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.theta_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.theta_data)])
+        
+        self.theta_display_chart.setAxisX(x_axis, self.theta_display_series)
+        self.theta_display_chart.setAxisY(y_axis, self.theta_display_series)
         
     def run(self,run_action,parameters_sr830=[],parameters_galvo=[]):
         if run_action.isChecked() == True:
@@ -391,12 +421,17 @@ class MainWindow(MW_Base, MW_Ui):
                 self.measure_thread = qtc.QThread()
                 self.measure.moveToThread(self.measure_thread)
                 self.measure.measure_finished.connect(self.measure_thread.quit)
+
+                # # self.measure.set_lltf(self.lltf)
+
+
+                self.measure_thread.start()
+                self.measure_thread.started.connect(self.measure.run)
                 self.measure.set_sr830(self.sr830)
-                # self.measure.set_lltf(self.lltf)
                 self.measure.set_pm100d(self.pm100d)
                 self.measure.set_x_chart(self.measure_display_chart)
-                self.measure_thread.started.connect(self.measure.run)
-                self.measure_thread.start()
+                self.measure.set_plots_theta(self.plots_theta)
+                
                 # self.mapper.set_sr830(self.sr830)
                 # self.mapper.set_parameters_galvo(self.parameters_galvo)
                 # self.mapper_thread.started.connect(self.mapper.do_mapping)
@@ -405,6 +440,7 @@ class MainWindow(MW_Base, MW_Ui):
                 # self.mapper.mapping_moved.connect(self.refresh_plots)
                 
                 self.measure.measure_finished.connect(lambda: run_action.setChecked(False))     
+                print('hi')
                 
             else:
                 self.log_box.append('<span style="color:lightcoral">[ERROR] SR830 not connected<\span>')
