@@ -12,39 +12,40 @@ from pymeasure.instruments.thorlabs import ThorlabsPM100USB
 
 from collections import deque
 
-class instrument(qtc.QObject):
-    # dataChanged = pyqtSignal(float, float, float, float)
-    log_str = qtc.pyqtSignal(str)
-    enable_instrument = qtc.pyqtSignal(str)
-    instrument = qtc.pyqtSignal(object)
+# class instrument(qtc.QObject):
+#     # dataChanged = pyqtSignal(float, float, float, float)
+#     log_str = qtc.pyqtSignal(str)
+#     enable_instrument = qtc.pyqtSignal(str)
+#     instrument = qtc.pyqtSignal(object)
 
 
-    def __init__(self, parent=None):
-        qtc.QThread.__init__(self, parent)
+#     def __init__(self, parent=None):
+#         qtc.QThread.__init__(self, parent)
         
     
-    def connect(self, resource_name):
-        try:
-            ThorlabsPM100USB(resource_name).id
-            # self.parameters_pm100d.setEnabled(True)
-            self.pm100d = ThorlabsPM100USB(resource_name)
-            self.enable_instrument.emit('PM100D')   
+def connect(self, resource_name):
+    try:
+        ThorlabsPM100USB(resource_name).id
+        # self.parameters_pm100d.setEnabled(True)
+        self.pm100d = ThorlabsPM100USB(resource_name)
+        self.parameters_pm100d.setEnabled(True)
+        # self.enable_instrument.emit('PM100D')   
+                    
+    except:
+        # self.log_str.emit('<span style="color:lightcoral">[ERROR] PM100D connection failed<\span>')
+        self.log_box.append('<span style="color:lightcoral">[ERROR] PM100D connection failed<\span>')
+        self.parameters_pm100d.setDisabled(True)
+        return
                 
-        except:
-            self.log_str.emit('<span style="color:lightcoral">[ERROR] PM100D connection failed<\span>')
-            # self.log_box.append('<span style="color:lightcoral">[ERROR] PM100D connection failed<\span>')
-            # self.parameters_pm100d.setDisabled(True)
-            return
-            
-        self.log_str.emit('<span style="color:palegreen">[SUCCESS] PM100D connected</span>')
-        self.instrument.emit(ThorlabsPM100USB(resource_name))
-    
-        return ThorlabsPM100USB(resource_name)
-    
-    # def update_lcd(self):
-    #     self.power.emit(self.pm100d.power)
+    self.log_box.append('<span style="color:palegreen">[SUCCESS] PM100D connected</span>')
+        # self.instrument.emit(ThorlabsPM100USB(resource_name))
         
-    #     return
+    return ThorlabsPM100USB(resource_name)
+       
+        # def update_lcd(self):
+        #     self.power.emit(self.pm100d.power)
+            
+        #     return
     
     
     

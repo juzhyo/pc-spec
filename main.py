@@ -61,16 +61,16 @@ class MainWindow(MW_Base, MW_Ui):
         # Thorlabs PM100D powermeter
         # self.equipments_pm100d_connect.clicked.connect(lambda: pm100d.connect(self, self.equipments_pm100d_address.currentText()))
         
-        self.pm100d = pm100d.instrument()
+        # self.pm100d = pm100d.instrument()
         
-        self.equipments_pm100d_connect.clicked.connect(lambda: self.pm100d.connect(self.equipments_pm100d_address.currentText()))
-
+        self.equipments_pm100d_connect.clicked.connect(lambda: pm100d.connect(self, self.equipments_pm100d_address.currentText()))
+        self.pm100d_chart_view()
         
-        self.pm100d.log_str.connect(self.update_log)
-        self.pm100d.enable_instrument.connect(self.enable_parameter_box)
-        self.pm100d.instrument.connect(self.pm100d_run_live)
+        # self.pm100d.log_str.connect(self.update_log)
+        # self.pm100d.enable_instrument.connect(self.enable_parameter_box)
+        # self.pm100d.instrument.connect(self.pm100d_run_live)
         
-        self.pm100d_chart_setup()
+        # self.pm100d_chart_setup()
        
 
         # self.pm100d_thread = qtc.QThread()
@@ -142,6 +142,60 @@ class MainWindow(MW_Base, MW_Ui):
             self.pm100d_live.set_trace_display_series(self.pm100d_trace_display_series)
             self.pm100d_live.run()
             self.pm100d_thread.start()
+            
+    def pm100d_chart_view(self):
+        num_data_points = 80
+    
+        x_axis = qtch.QValueAxis()
+        x_axis.setRange(0, num_data_points)
+        x_axis.setLabelsVisible(False)
+        y_axis = qtch.QValueAxis()
+        y_axis.setRange(-1e-5, 10)
+    
+        gridColor = qtg.QColor('#696969')
+        x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        
+        self.pm100d_chart = qtch.QChart()
+        self.pm100d_chart.setMargins(qtc.QMargins(0,-25,0,0))
+        self.pm100d_chart.setTheme(qtch.QChart.ChartThemeLight)
+        self.pm100d_chart.setBackgroundVisible(False)
+        self.pm100d_chart.setBackgroundRoundness(0)
+        self.pm100d_chart.layout().setContentsMargins(0,0,0,0)
+        
+        self.parameters_pm100d_trace_display.setChart(self.pm100d_chart)
+
+        self.pm100d_series = qtch.QLineSeries()
+        self.pm100d_chart.addSeries(self.pm100d_series)
+            
+        self.pm100d_data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.pm100d_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.pm100d_data)])
+        
+        self.pm100d_chart.setAxisX(x_axis, self.pm100d_series)
+        self.pm100d_chart.setAxisY(y_axis, self.pm100d_series)
+    
+        # chart.setRenderHint(qtg.QPainter.Antialiasing)
+
+        self.pm100d_timer=qtc.QTimer(interval=200, timeout=self.pm100d_refresh_stats)
+        # self.timer.timeout.connect(lambda: refresh_stats)
+        self.pm100d_timer.start()
+        
+    def pm100d_refresh_stats(self):
+        if self.parameters_pm100d.isEnabled():
+            y_axis = qtch.QValueAxis()
+            axisBrush = qtg.QBrush(qtg.QColor('#ffffff'))
+            y_axis.setLabelsBrush(axisBrush)
+            gridColor = qtg.QColor('#696969')
+            # x_axis.setGridLineColor(gridColor)
+            y_axis.setGridLineColor(gridColor)
+
+            self.pm100d_data.append(self.pm100d.power*1e6)
+            y_axis.setRange(min(self.pm100d_data), max(self.pm100d_data))
+                
+            new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.pm100d_data)]
+            self.pm100d_series.replace(new_data)
+            
+            self.pm100d_chart.setAxisY(y_axis, self.pm100d_series)
     
     def sr830_channel_view(self):    
         num_data_points = 80
