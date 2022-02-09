@@ -144,7 +144,7 @@ class MainWindow(MW_Base, MW_Ui):
             self.pm100d_thread.start()
             
     def pm100d_chart_view(self):
-        num_data_points = 80
+        num_data_points = 40
     
         x_axis = qtch.QValueAxis()
         x_axis.setRange(0, num_data_points)
@@ -176,7 +176,7 @@ class MainWindow(MW_Base, MW_Ui):
     
         # chart.setRenderHint(qtg.QPainter.Antialiasing)
 
-        self.pm100d_timer=qtc.QTimer(interval=200, timeout=self.pm100d_refresh_stats)
+        self.pm100d_timer=qtc.QTimer(interval=500, timeout=self.pm100d_refresh_stats)
         # self.timer.timeout.connect(lambda: refresh_stats)
         self.pm100d_timer.start()
         
@@ -190,12 +190,14 @@ class MainWindow(MW_Base, MW_Ui):
             y_axis.setGridLineColor(gridColor)
 
             self.pm100d_data.append(self.pm100d.power*1e6)
-            y_axis.setRange(min(self.pm100d_data), max(self.pm100d_data))
+            y_axis.setRange(np.floor(min(self.pm100d_data)), np.ceil(max(self.pm100d_data)))
                 
             new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.pm100d_data)]
             self.pm100d_series.replace(new_data)
             
             self.pm100d_chart.setAxisY(y_axis, self.pm100d_series)
+            
+            self.parameters_pm100d_lcd.display(self.pm100d.power*1e6)
     
     def sr830_channel_view(self):    
         num_data_points = 80
