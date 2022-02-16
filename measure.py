@@ -44,6 +44,10 @@ class measure(qtc.QObject):
     @qtc.pyqtSlot(object)    
     def set_pm100d(self, pm100d):
         self.pm100d = pm100d
+        
+    @qtc.pyqtSlot(int)    
+    def set_num_data_points(self, num_data_points):
+        self.num_data_points = num_data_points
 
     @qtc.pyqtSlot()    
     def set_x_chart(self, x_chart):
@@ -74,10 +78,9 @@ class measure(qtc.QObject):
         self.x.connect(self.plot_x)
         
         self.theta_data = []
-        self.theta.connect(self.plot_theta)
+        # self.theta.connect(self.plot_theta)
         
-        for i in range(10):
-            print(i)
+        for i in range(self.num_data_points):
             self.update()
         
         # power = self.pm100d.power*1e6
@@ -139,35 +142,41 @@ class measure(qtc.QObject):
         new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.x_data)]
         self.x_chart_series.replace(new_data)
 
-    @qtc.pyqtSlot(float)
-    def plot_theta(self, theta):
-        # append data point to series
-        # add series to chart
-        # set chart
+    # @qtc.pyqtSlot(float)
+    # def plot_theta(self, theta):
+    #     # append data point to series
+    #     # add series to chart
+    #     # set chart
         
-        self.theta_chart = self.plots_theta.chart()
-        # y_axis = self.plots_theta.axisY()
-        # self.theta_chart.setMargins(qtc.QMargins(0,0,0,0))
-        # self.theta_chart.setTheme(qtch.QChart.ChartThemeLight)
-        # self.theta_chart.setBackgroundVisible(False)
-        # self.theta_chart.setBackgroundRoundness(0)
-        # self.theta_chart.layout().setContentsMargins(0,0,0,0)
+    #     self.theta_chart = self.plots_theta.chart()
         
-        # self.plots_theta.setChart(self.theta_chart)
-        
-        self.theta_data.append(theta)
-        new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.theta_data)]
-        self.theta_chart_series.replace(new_data)
-        
-        # x_axis = qtch.QValueAxis()
-        # x_axis.setRange(0, len(self.theta_data))
-        
-        # y_axis = qtch.QValueAxis()
-        # y_axis.setRange(0, 2)
+    #     y_axis = qtch.QValueAxis()
+    #     y_axis.setRange(-1e-5, 1e-5)
     
-        # gridColor = qtg.QColor('#696969')
-        # x_axis.setGridLineColor(gridColor)
-        # y_axis.setGridLineColor(gridColor)
+    #     gridColor = qtg.QColor('#696969')
+    #     y_axis.setGridLineColor(gridColor)
         
-        # self.theta_chart.setAxisX(x_axis, self.theta_chart_series)
-        self.theta_chart.setAxisY(y_axis, self.theta_chart_series)
+    #     # y_axis = self.plots_theta.axisY()
+    #     # self.theta_chart.setMargins(qtc.QMargins(0,0,0,0))
+    #     # self.theta_chart.setTheme(qtch.QChart.ChartThemeLight)
+    #     # self.theta_chart.setBackgroundVisible(False)
+    #     # self.theta_chart.setBackgroundRoundness(0)
+    #     # self.theta_chart.layout().setContentsMargins(0,0,0,0)
+        
+    #     # self.plots_theta.setChart(self.theta_chart)
+        
+    #     self.theta_data.append(theta)
+    #     new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.theta_data)]
+    #     self.theta_chart_series.replace(new_data)
+        
+    #     # x_axis = qtch.QValueAxis()
+    #     # x_axis.setRange(0, len(self.theta_data))
+        
+    #     # y_axis.setRange(0, 2)
+    
+    #     # gridColor = qtg.QColor('#696969')
+    #     # x_axis.setGridLineColor(gridColor)
+    #     # y_axis.setGridLineColor(gridColor)
+        
+    #     # self.theta_chart.setAxisX(x_axis, self.theta_chart_series)
+        # self.theta_chart.setAxisY(y_axis, self.theta_chart_series)

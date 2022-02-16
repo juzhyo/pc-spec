@@ -353,10 +353,10 @@ class MainWindow(MW_Base, MW_Ui):
         self.pm100d_trace_display_chart.setAxisY(y_axis, self.pm100d_trace_display_series)
         
     def measure_chart_setup(self):
-        num_data_points = 0
+        self.num_data_points = int(self.parameters_lltf_start.value() - self.parameters_lltf_end.value()/self.parameters_lltf_step.value())
     
         x_axis = qtch.QValueAxis()
-        x_axis.setRange(0, num_data_points)
+        x_axis.setRange(0, self.num_data_points)
         x_axis.setLabelsVisible(False)
         y_axis = qtch.QValueAxis()
         y_axis.setRange(0, 1)
@@ -377,16 +377,14 @@ class MainWindow(MW_Base, MW_Ui):
         self.measure_display_series = qtch.QScatterSeries()
         self.measure_display_chart.addSeries(self.measure_display_series)
             
-        self.measure_data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.measure_data = deque([0]*self.num_data_points, maxlen=self.num_data_points)
         self.measure_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.measure_data)])
         
         self.measure_display_chart.setAxisX(x_axis, self.measure_display_series)
         self.measure_display_chart.setAxisY(y_axis, self.measure_display_series)
-
-        num_data_points = 0
     
         x_axis = qtch.QValueAxis()
-        x_axis.setRange(0, num_data_points)
+        x_axis.setRange(0, self.num_data_points)
         x_axis.setLabelsVisible(False)
         y_axis = qtch.QValueAxis()
         y_axis.setRange(0, 1)
@@ -407,7 +405,7 @@ class MainWindow(MW_Base, MW_Ui):
         self.theta_display_series = qtch.QScatterSeries()
         self.theta_display_chart.addSeries(self.theta_display_series)
             
-        self.theta_data = deque([0]*num_data_points, maxlen=num_data_points)
+        self.theta_data = deque([0]*self.num_data_points, maxlen=self.num_data_points)
         self.theta_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.theta_data)])
         
         self.theta_display_chart.setAxisX(x_axis, self.theta_display_series)
@@ -429,8 +427,10 @@ class MainWindow(MW_Base, MW_Ui):
                 self.measure_thread.started.connect(self.measure.run)
                 self.measure.set_sr830(self.sr830)
                 self.measure.set_pm100d(self.pm100d)
+                self.measure.set_num_data_points(self.num_data_points)
                 self.measure.set_x_chart(self.measure_display_chart)
                 self.measure.set_plots_theta(self.plots_theta)
+                self.measure.theta.connect(self.plot_theta)
                 
                 # self.mapper.set_sr830(self.sr830)
                 # self.mapper.set_parameters_galvo(self.parameters_galvo)
@@ -448,6 +448,49 @@ class MainWindow(MW_Base, MW_Ui):
              
         else:
             pass
+        
+    @qtc.pyqtSlot(float)
+    def plot_theta(self, theta):
+        # append data point to series
+        # add series to chart
+        # set chart
+        
+        self.theta_chart = self.plots_theta.chart()
+        
+        y_axis = qtch.QValueAxis()
+        y_axis.setRange(-180, 180)
+    
+        gridColor = qtg.QColor('#696969')
+        # x_axis.setGridLineColor(gridColor)
+        y_axis.setGridLineColor(gridColor)
+        print(theta)
+        
+        # y_axis = self.plots_theta.axisY()
+        # self.theta_chart.setMargins(qtc.QMargins(0,0,0,0))
+        # self.theta_chart.setTheme(qtch.QChart.ChartThemeLight)
+        # self.theta_chart.setBackgroundVisible(False)
+        # self.theta_chart.setBackgroundRoundness(0)
+        # self.theta_chart.layout().setContentsMargins(0,0,0,0)
+        
+        # self.plots_theta.setChart(self.theta_chart)
+        
+        # self.theta_chart_series = qtch.QScatterSeries()
+        
+        self.theta_data.append(theta)
+        new_data = [qtc.QPointF(x, y) for x, y in enumerate(self.theta_data)]
+        self.theta_display_series.replace(new_data)
+        
+        # x_axis = qtch.QValueAxis()
+        # x_axis.setRange(0, len(self.theta_data))
+        
+        # y_axis.setRange(0, 2)
+    
+        # gridColor = qtg.QColor('#696969')
+        # x_axis.setGridLineColor(gridColor)
+        # y_axis.setGridLineColor(gridColor)
+        
+        # self.theta_chart.setAxisX(x_axis, self.theta_chart_series)
+        self.theta_chart.setAxisY(y_axis, self.theta_display_series)
 
 
 # class test(MainWindow):
