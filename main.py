@@ -353,7 +353,7 @@ class MainWindow(MW_Base, MW_Ui):
         self.pm100d_trace_display_chart.setAxisY(y_axis, self.pm100d_trace_display_series)
         
     def measure_chart_setup(self):
-        self.num_data_points = int(self.parameters_lltf_start.value() - self.parameters_lltf_end.value()/self.parameters_lltf_step.value())
+        self.num_data_points = int((self.parameters_lltf_start.value() - self.parameters_lltf_end.value())/self.parameters_lltf_step.value())
     
         x_axis = qtch.QValueAxis()
         x_axis.setRange(0, self.num_data_points)
@@ -405,7 +405,7 @@ class MainWindow(MW_Base, MW_Ui):
         self.theta_display_series = qtch.QScatterSeries()
         self.theta_display_chart.addSeries(self.theta_display_series)
             
-        self.theta_data = deque([0]*self.num_data_points, maxlen=self.num_data_points)
+        self.theta_data = deque(0*[0]*self.num_data_points, maxlen=self.num_data_points)
         self.theta_display_series.append([qtc.QPointF(x,y) for x, y in enumerate(self.theta_data)])
         
         self.theta_display_chart.setAxisX(x_axis, self.theta_display_series)
@@ -422,7 +422,8 @@ class MainWindow(MW_Base, MW_Ui):
 
                 # # self.measure.set_lltf(self.lltf)
 
-
+                self.num_data_points = int((self.parameters_lltf_start.value() - self.parameters_lltf_end.value())/self.parameters_lltf_step.value())
+                print(self.num_data_points)
                 self.measure_thread.start()
                 self.measure_thread.started.connect(self.measure.run)
                 self.measure.set_sr830(self.sr830)
@@ -431,6 +432,7 @@ class MainWindow(MW_Base, MW_Ui):
                 self.measure.set_x_chart(self.measure_display_chart)
                 self.measure.set_plots_theta(self.plots_theta)
                 self.measure.theta.connect(self.plot_theta)
+                self.theta_data = deque(0*[0]*self.num_data_points, maxlen=self.num_data_points)
                 
                 # self.mapper.set_sr830(self.sr830)
                 # self.mapper.set_parameters_galvo(self.parameters_galvo)

@@ -81,7 +81,12 @@ class measure(qtc.QObject):
         # self.theta.connect(self.plot_theta)
         
         for i in range(self.num_data_points):
-            self.update()
+            time.sleep(2*self.sr830.time_constant)
+            # time.sleep(1)
+            try:
+                self.update()
+            except VisaIOError:
+                self.update()
         
         # power = self.pm100d.power*1e6
         # x = self.sr830.x
